@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game Replay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f0f0;
+    }
+    .game-cell {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #ddd;
+    }
+    .snake {
+      background-color: #4ade80;
+    }
+    .food {
+      background-color: #f87171;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="max-w-4xl w-full bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-bold text-center mb-6">Erik Snake Replay</h1>
+    
+    <div class="flex flex-col items-center">
+      <div class="flex justify-between items-center w-full mb-4">
+        <div>
+          <span class="font-semibold">Player:</span> <span id="username"><%= username %></span>
+        </div>
+        <div>
+          <span class="font-semibold">Score:</span> <span id="score"><%= score %></span>
+        </div>
+        <div>
+          <span class="font-semibold">Seed:</span> <span id="seed"><%= seed %></span>
+        </div>
+      </div>
+      
+      <div id="game-board" class="border-2 border-gray-300 inline-block mb-6">
+        <!-- Game grid will be generated here -->
+      </div>
+      
+      <div class="flex gap-4">
+        <button id="play-pause" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded transition duration-200">Play</button>
+        <button id="restart" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded transition duration-200">Restart</button>
+        <a href="/" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded transition duration-200 text-center">Play Your Own Game</a>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Store the replay data from the server
+    const replayData = "<%= replayData %>";
+    const gameSeed = "<%= seed %>";
+  </script>
+  <script src="/js/isaacCSPRNG.js"></script>
+  <script src="/js/replay.js"></script>
+</body>
+</html>

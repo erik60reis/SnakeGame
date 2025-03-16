@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f0f0;
+    }
+    .game-cell {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #ddd;
+    }
+    .snake {
+      background-color: #4ade80;
+    }
+    .food {
+      background-color: #f87171;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="max-w-4xl w-full bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-bold text-center mb-6">Erik Snake</h1>
+    
+    <div class="flex flex-col md:flex-row gap-8">
+      <!-- Game Area -->
+      <div class="flex-1">
+        <div class="flex justify-between items-center mb-4">
+          <div class="text-lg font-semibold">Score: <span id="score">0</span></div>
+          <div class="text-lg font-semibold">High Score: <span id="high-score">0</span></div>
+        </div>
+        
+        <div id="game-board" class="border-2 border-gray-300 inline-block">
+          <!-- Game grid will be generated here -->
+        </div>
+        
+        <div class="mt-4">
+          <div id="game-over" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            Game Over! Your score: <span id="final-score">0</span>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row gap-4 mt-4">
+            <input type="text" id="username" placeholder="Enter your username" class="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="save-score" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded transition duration-200">Save Score</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Leaderboard -->
+      <div class="flex-1">
+        <h2 class="text-xl font-semibold mb-4">Leaderboard</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-white">
+            <thead>
+              <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                <th class="py-3 px-6 text-left">Rank</th>
+                <th class="py-3 px-6 text-left">Username</th>
+                <th class="py-3 px-6 text-left">Score</th>
+                <th class="py-3 px-6 text-left">Replay</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard" class="text-gray-600 text-sm">
+              <!-- Leaderboard entries will be added here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/js/isaacCSPRNG.js"></script>
+  <script src="/js/game.js"></script>
+</body>
+</html>

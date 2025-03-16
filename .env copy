@@ -1,0 +1,14 @@
+# Database Configuration
+# Set DB_TYPE to either 'sqlite' or 'mysql'
+DB_TYPE=sqlite
+
+# SQLite Configuration
+SQLITE_STORAGE=database.sqlite
+
+# MySQL Configuration
+# These settings are only used when DB_TYPE=mysql
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_DATABASE=snake_game
+MYSQL_USERNAME=root
+MYSQL_PASSWORD=password
