@@ -2,7 +2,7 @@
 const GRID_SIZE = 20;
 const CELL_SIZE = 20;
 const INITIAL_SNAKE_LENGTH = 3;
-const GAME_SPEED = 50; // milliseconds
+const GAME_SPEED = 52; // milliseconds
 
 // Game variables
 let snake = [];
@@ -38,6 +38,10 @@ function initGame() {
   score = 0;
   isGameOver = false;
   replayData = '';
+  borderCollisionCounter = 0; // Reset border collision counter
+  
+  // Reset submittedScores for the new game
+  localStorage.removeItem('snakeGameSubmittedScores');
   
   // Generate a random seed
   seed = generateSeed(10);
@@ -227,9 +231,20 @@ function moveSnake() {
 function checkCollision() {
   const head = snake[0];
   
-  // Check wall collision
+  // Check wall collision with grace period
   if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
-    return true;
+    // Freeze the snake at the border by adjusting the head position
+    if (head.x < 0) head.x = 0;
+    if (head.x >= GRID_SIZE) head.x = GRID_SIZE - 1;
+    if (head.y < 0) head.y = 0;
+    if (head.y >= GRID_SIZE) head.y = GRID_SIZE - 1;
+    
+    borderCollisionCounter++;
+    // Only return true if the snake has been in collision with a border for 2 consecutive frames
+    return borderCollisionCounter >= 2;
+  } else {
+    // Reset the counter if not colliding with a border
+    borderCollisionCounter = 0;
   }
   
   // Check self collision (skip the head)
@@ -332,6 +347,41 @@ function saveScore() {
   const replayToSave = score > highScore ? replayData : highScoreReplay;
   const seedToSave = score > highScore ? seed : highScoreSeed;
   
+  // Check for duplicate replay data in the leaderboard
+  fetch('/api/scores')
+    .then(response => response.json())
+    .then(scores => {
+      // Check if this exact replay already exists in the database
+      const duplicateReplay = scores.find(s => s.replayData === replayToSave);
+      
+      if (duplicateReplay) {
+        alert('This exact replay has already been submitted by another player. Please play a new game.');
+        return;
+      }
+      
+      // Continue with score submission if no duplicate replay found
+      continueScoreSubmission(username, scoreToSave, seedToSave, replayToSave);
+    })
+    .catch(error => {
+      console.error('Error checking for duplicate replays:', error);
+      // If there's an error checking, still allow submission
+      continueScoreSubmission(username, scoreToSave, seedToSave, replayToSave);
+    });
+}
+
+// Continue with score submission after validation
+function continueScoreSubmission(username, scoreToSave, seedToSave, replayToSave) {
+  // Get the list of usernames that have already submitted this score value
+  const submittedScores = JSON.parse(localStorage.getItem('snakeGameSubmittedScores') || '{}');
+  const scoreKey = scoreToSave.toString();
+  const usernamesForThisScore = submittedScores[scoreKey] || [];
+  
+  // Check if this score value has already been submitted by the maximum allowed users (2)
+  if (usernamesForThisScore.length >= 2) {
+    alert('This high score has already been submitted by 2 different users. No more submissions allowed for this score value.');
+    return;
+  }
+  
   // Send score to the server
   fetch('/api/scores', {
     method: 'POST',
@@ -347,6 +397,19 @@ function saveScore() {
   })
   .then(response => response.json())
   .then(data => {
+    // Save username to localStorage to prevent reuse
+    const savedUsernames = JSON.parse(localStorage.getItem('snakeGameUsernames') || '[]');
+    savedUsernames.push(username);
+    localStorage.setItem('snakeGameUsernames', JSON.stringify(savedUsernames));
+    
+    // Update the submittedScores to track which scores have been submitted by which usernames
+    const submittedScores = JSON.parse(localStorage.getItem('snakeGameSubmittedScores') || '{}');
+    const scoreKey = scoreToSave.toString();
+    const usernamesForThisScore = submittedScores[scoreKey] || [];
+    usernamesForThisScore.push(username);
+    submittedScores[scoreKey] = usernamesForThisScore;
+    localStorage.setItem('snakeGameSubmittedScores', JSON.stringify(submittedScores));
+    
     // Reload leaderboard
     loadLeaderboard();
   })
@@ -366,20 +429,55 @@ async function loadLeaderboard() {
     leaderboardElement.innerHTML = '';
     
     scores.forEach((score, index) => {
+      // Create safe, escaped versions of user input
+      const safeUsername = escapeHTML(score.username);
+      
       const row = document.createElement('tr');
-      row.innerHTML = `
-        <td class="py-3 px-6">${index + 1}</td>
-        <td class="py-3 px-6">${score.username}</td>
-        <td class="py-3 px-6">${score.score}</td>
-        <td class="py-3 px-6">
-          <a href="/replay/${score.username}" class="text-blue-500 hover:underline">Watch</a>
-        </td>
-      `;
+      
+      // Create cells using DOM methods instead of innerHTML for better security
+      const rankCell = document.createElement('td');
+      rankCell.className = 'py-3 px-6';
+      rankCell.textContent = index + 1;
+      
+      const usernameCell = document.createElement('td');
+      usernameCell.className = 'py-3 px-6';
+      usernameCell.textContent = safeUsername;
+      
+      const scoreCell = document.createElement('td');
+      scoreCell.className = 'py-3 px-6';
+      scoreCell.textContent = score.score;
+      
+      const replayCell = document.createElement('td');
+      replayCell.className = 'py-3 px-6';
+      
+      const replayLink = document.createElement('a');
+      replayLink.href = `/replay/${encodeURIComponent(safeUsername)}`;
+      replayLink.className = 'text-blue-500 hover:underline';
+      replayLink.textContent = 'Watch';
+      
+      replayCell.appendChild(replayLink);
+      
+      // Append all cells to the row
+      row.appendChild(rankCell);
+      row.appendChild(usernameCell);
+      row.appendChild(scoreCell);
+      row.appendChild(replayCell);
+      
       leaderboardElement.appendChild(row);
     });
   } catch (error) {
     console.error('Error loading leaderboard:', error);
   }
+}
+
+// Helper function to escape HTML and prevent XSS
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // Initialize the game when the page loads

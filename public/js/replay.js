@@ -2,7 +2,7 @@
 const GRID_SIZE = 20;
 const CELL_SIZE = 20;
 const INITIAL_SNAKE_LENGTH = 3;
-const REPLAY_SPEED = 50; // milliseconds
+const REPLAY_SPEED = 52; // milliseconds
 
 // Game variables
 let snake = [];
@@ -12,6 +12,7 @@ let score = 0;
 let replayInterval;
 let currentMoveIndex = 0;
 let isPaused = true;
+let borderCollisionCounter = 0; // Counter for border collision grace period
 
 // DOM elements
 const gameBoard = document.getElementById('game-board');
@@ -28,6 +29,7 @@ function initReplay() {
   score = 0;
   currentMoveIndex = 0;
   isPaused = true;
+  borderCollisionCounter = 0; // Reset border collision counter
   
   // Update play/pause button
   playPauseButton.textContent = 'Play';
@@ -229,9 +231,20 @@ function moveSnake() {
 function checkCollision() {
   const head = snake[0];
   
-  // Check wall collision
+  // Check wall collision with grace period
   if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
-    return true;
+    // Freeze the snake at the border by adjusting the head position
+    if (head.x < 0) head.x = 0;
+    if (head.x >= GRID_SIZE) head.x = GRID_SIZE - 1;
+    if (head.y < 0) head.y = 0;
+    if (head.y >= GRID_SIZE) head.y = GRID_SIZE - 1;
+    
+    borderCollisionCounter++;
+    // Only return true if the snake has been in collision with a border for 2 consecutive frames
+    return borderCollisionCounter >= 2;
+  } else {
+    // Reset the counter if not colliding with a border
+    borderCollisionCounter = 0;
   }
   
   // Check self collision (skip the head)

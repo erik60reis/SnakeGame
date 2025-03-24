@@ -110,6 +110,13 @@ app.post('/api/scores', async (req, res) => {
   try {
     const { username, score, seed, replayData } = req.body;
     
+    // Check if this exact replay already exists in the database
+    const duplicateReplay = await Score.findOne({ where: { replayData } });
+    
+    if (duplicateReplay) {
+      return res.status(400).json({ error: 'Duplicate replay data detected' });
+    }
+    
     // Check if user already has a score
     const existingScore = await Score.findOne({ where: { username } });
     
